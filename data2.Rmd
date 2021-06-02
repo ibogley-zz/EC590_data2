@@ -1,0 +1,32 @@
+---
+title: "EC590:Data Assignment 2"
+author: "Ian Bogley"
+date: "5/28/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(pacman)
+p_load(haven,sandwich,tidyverse,stargazer)
+
+data <- read_dta("C:/Users/IB/Desktop/school/EC590/hw/data2/MoneyExperiment.dta") %>%
+  mutate(otherbillsadded = ifelse(otherbillsadded==2,0,1),
+         moneyuse = as.factor(moneyuse))
+```
+
+## Baseline Balance
+```{r}
+bvar <- c("wealth","windex","sex","age","schooling","hhsize")
+for (i in bvar) {
+  eval(parse(text = paste("blm_",i," <- lm(data = data,formula = ",i," ~ public)",sep = "")))
+  eval(parse(text = paste("rse_blm_",i," <- list(sqrt(diag(vcovHC(blm_",i,"))))",sep = "")))
+}
+```
+```{r results='asis'}
+stargazer(blm_age,blm_hhsize,blm_schooling,blm_sex,blm_wealth,blm_windex,
+          se = c(rse_blm_age,rse_blm_hhsize,rse_blm_schooling,rse_blm_sex,rse_blm_wealth,rse_blm_windex))
+```
