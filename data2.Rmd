@@ -30,3 +30,65 @@ for (i in bvar) {
 stargazer(blm_age,blm_hhsize,blm_schooling,blm_sex,blm_wealth,blm_windex,
           se = c(rse_blm_age,rse_blm_hhsize,rse_blm_schooling,rse_blm_sex,rse_blm_wealth,rse_blm_windex))
 ```
+
+
+## Regression Analysis
+```{r}
+
+p_load(sandwich,stargazer)
+
+
+
+lm(pcsaved ~ public+hyperbolic+othersknewmoney+age+wealth+hhsize+sex+windex+schooling, data=money)
+
+##does having public knowledge act as informal commitment device or cause people to want to borrow money
+
+reg1 = lm(pcsaved ~ public+hyperbolic+othersknewmoney, data=money)
+
+se1 = sqrt(diag(vcovHC(reg1)))
+
+reg2 =lm(pcsaved ~ public+othersknewenvelope+hyperbolic+othersknewmoney+othersknewenvelope+age+wealth+hhsize+sex+windex+schooling, data=money)
+
+se2 = sqrt(diag(vcovHC(reg2)))
+
+
+##test for heterogenous effect by sex
+
+
+reg3 = lm(pcsaved ~ public+public*sex, data=money)
+reg3
+
+se3 = sqrt(diag(vcovHC(reg3)))
+
+reg4 =lm(pcsaved ~ public+public*sex+age+wealth+hhsize+windex+schooling, data=money)
+
+reg4
+se4 = sqrt(diag(vcovHC(reg4)))
+
+
+
+##more likely someone else takes money when a women is the person receiving it 
+reg5 = lm(elsetookmoney ~ public+sex+public*sex, data=money)
+
+se5 = sqrt(diag(vcovHC(reg5)))
+
+
+reg6 =lm(elsetookmoney ~ public+ public*sex+ age+wealth+hhsize+windex+schooling, data=money)
+
+reg6
+
+se6 = sqrt(diag(vcovHC(reg6)))
+
+
+stargazer(reg1,reg2,reg3,reg4,reg5,reg6, type="html",
+          se= c(se1, se2, se3, se4, se5, se6))
+
+
+
+
+
+
+
+
+
+```
