@@ -2,7 +2,9 @@
 title: "EC590:Data Assignment 2"
 author: "Ian Bogley"
 date: "5/28/2021"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -13,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(pacman)
 p_load(haven,sandwich,tidyverse,stargazer)
 
-data <- read_dta("C:/Users/IB/Desktop/school/EC590/hw/data2/MoneyExperiment.dta") %>%
+money <- read_dta("MoneyExperiment.dta") %>%
   mutate(otherbillsadded = ifelse(otherbillsadded==2,0,1),
          moneyuse = as.factor(moneyuse))
 ```
@@ -22,18 +24,28 @@ data <- read_dta("C:/Users/IB/Desktop/school/EC590/hw/data2/MoneyExperiment.dta"
 ```{r}
 bvar <- c("wealth","windex","sex","age","schooling","hhsize")
 for (i in bvar) {
-  eval(parse(text = paste("blm_",i," <- lm(data = data,formula = ",i," ~ public)",sep = "")))
+  eval(parse(text = paste("blm_",i," <- lm(data = money,formula = ",i," ~ public)",sep = "")))
   eval(parse(text = paste("rse_blm_",i," <- list(sqrt(diag(vcovHC(blm_",i,"))))",sep = "")))
 }
 ```
+
+
 ```{r results='asis'}
 stargazer(blm_age,blm_hhsize,blm_schooling,blm_sex,blm_wealth,blm_windex,
-          se = c(rse_blm_age,rse_blm_hhsize,rse_blm_schooling,rse_blm_sex,rse_blm_wealth,rse_blm_windex))
+          se = c(rse_blm_age,rse_blm_hhsize,rse_blm_schooling,rse_blm_sex,rse_blm_wealth,rse_blm_windex), type='html')
 ```
 
 
 ## Regression Analysis
-```{r}
+
+The aim of this regression analysis is to try and understand what mechanisms might be causing some people to save more than others. In our first regressions specifications we were interested in two variables. The first if public, a binary indicator that is 1 if the person received the envelope in a place that others could see and 0 if not. We want to look at this variable to see if pressure to share the money reduces the amount someone saves. The second variable we include in this specification is hyperbolic preferences. As we discussed in the Odysseus paper, self-control can often represent a barrier to saving, as many people have time inconsistent preferences. 
+
+After testing these specifications we then conducted heterogeneity analysis, including an interaction term between sex and whether or not the evelope was given publicly. We first used percent saved as our outcome variable of interest and then transitioned to whether or not someone else took the money. We tested this model because we were interested in seeing if women face greater pressure to share money than men do, due to cultural norms. 
+
+
+
+
+```{r, results ='asis'}
 
 p_load(sandwich,stargazer)
 
@@ -43,11 +55,16 @@ lm(pcsaved ~ public+hyperbolic+othersknewmoney+age+wealth+hhsize+sex+windex+scho
 
 ##does having public knowledge act as informal commitment device or cause people to want to borrow money
 
-reg1 = lm(pcsaved ~ public+hyperbolic+othersknewmoney, data=money)
+reg1 = lm(pcsaved ~ public+hyperbolic, data=money)
+
+#look at results
+reg1
 
 se1 = sqrt(diag(vcovHC(reg1)))
 
-reg2 =lm(pcsaved ~ public+othersknewenvelope+hyperbolic+othersknewmoney+othersknewenvelope+age+wealth+hhsize+sex+windex+schooling, data=money)
+reg2 =lm(pcsaved ~ public+hyperbolic+age+wealth+hhsize+sex+windex+schooling, data=money)
+
+reg2
 
 se2 = sqrt(diag(vcovHC(reg2)))
 
@@ -60,7 +77,7 @@ reg3
 
 se3 = sqrt(diag(vcovHC(reg3)))
 
-reg4 =lm(pcsaved ~ public+public*sex+age+wealth+hhsize+windex+schooling, data=money)
+reg4 =lm(pcsaved ~ public+public*sex+age+wealth+hhsize+windex+schooling+sex, data=money)
 
 reg4
 se4 = sqrt(diag(vcovHC(reg4)))
@@ -70,6 +87,7 @@ se4 = sqrt(diag(vcovHC(reg4)))
 ##more likely someone else takes money when a women is the person receiving it 
 reg5 = lm(elsetookmoney ~ public+sex+public*sex, data=money)
 
+reg5
 se5 = sqrt(diag(vcovHC(reg5)))
 
 
@@ -92,3 +110,16 @@ stargazer(reg1,reg2,reg3,reg4,reg5,reg6, type="html",
 
 
 ```
+
+
+The results of our first specification tell us that the envelope being given in public has a large negative effect on the percent of the money the recipient saved. Without controls this was a 20% decrease in the percentage saved on average, with controls the magnitude increased to a 21.1% decrease. Hyperbolic preferences without controls had a small negative effect of 3% on percentage saved, but is insignificant when controls are included. This result is notable as it indicates that in this setting outside pressure has a greater impact on savings than does preferences. 
+
+When we look at the interaction between sex and public, we see there is a 5.4% decrease in savings in the model without controls and a 1.3 percent increase in savings when we include controls. However in both models sex alone has a strong negative impact on the percentage saved. This indicates that regardless of the evelope being given in public, women save less than man do on average. 
+
+In our final models we use someone else taking the money as our outcome variable to test if women face more pressure to share money than man do. Our results show that without controls women who receive the envelope in public are approximately 16 percent less likely to have someone else take the money than men on average. This result is robust when we include controls, actually increasing to 16.4 percentage points on average. This indicates that women are actually less likely to have someone else take money than man are on average. 
+
+
+
+
+
+
