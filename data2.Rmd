@@ -1,7 +1,7 @@
 ---
 title: "EC590:Data Assignment 2"
-author: "Ian Bogley"
-date: "5/28/2021"
+author: "Ian Bogley, Jonas Bowman"
+date: "6/4/2021"
 output:
   html_document:
     df_print: paged
